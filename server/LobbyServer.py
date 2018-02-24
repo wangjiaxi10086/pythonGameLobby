@@ -70,14 +70,12 @@ class Lobby(object):
 
             now_time = datetime.datetime.now()
             timeval = (now_time - self.user_login_time[sock]).total_seconds()
-            print timeval
             user_data[Constant.TIMEVAL] += timeval
             self.user_login_time.pop(sock)
 
             # update user data to file
             with open(self.user_path + '\\' + user_name, 'w') as user_file:
                 data_str = json.dumps(user_data)
-                print data_str
                 user_file.write(data_str)
         sock.close()
 
@@ -102,6 +100,8 @@ class Lobby(object):
                 self.userRegister(sock, tbl)
             elif tbl[Constant.INSTRUCTION] == Instructions.LOGIN:
                 self.userLogin(sock, tbl)
+            elif tbl[Constant.INSTRUCTION] == Instructions.SENDALL:
+                sock.send('Hello')
 
     def userLogin(self, sock, inst):
         name = inst[Constant.NAME]

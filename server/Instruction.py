@@ -5,6 +5,8 @@ class Instructions:
     REGISTER = 1
     LOGIN = 2
     ACK = 3
+    SEND = 4
+    SENDALL = 5
 
     REGISTER_SUCCESS = 1000
     LOGIN_SUCCESS = 1001
@@ -27,6 +29,8 @@ class Constant:
     PASSWORD = 'pass'
     TIMEVAL = 'timeval'
     FEEDBACK = 'feedback'
+    DESTINATION = 'dest'
+    MESSAGE = 'msg'
 
     def __init__(self):
         pass

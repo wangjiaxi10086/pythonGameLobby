@@ -1,9 +1,39 @@
 import socket
 import json
 import struct
+import threading
 from Instruction import Instructions
 from Instruction import Constant
 
+
+class RcvThread(threading.Thread):
+
+    def __init__(self, msg_buf, sock):
+        threading.Thread.__init__(self)
+        self.sock = sock
+        self.msg_buf = msg_buf
+        self.out = False
+
+    def run(self):
+        while True:
+            try:
+                data = self.sock.recv(1024)
+            except socket.error as e:
+                self.sock.shutdown(socket.SHUT_WR)
+                break
+            else:
+                if data:
+                    self.msg_buf += data
+                    # while len(self.msg_buf) > 4:
+                    #     length = struct.unpack('i', self.msg_buf[0:4])[0]
+                    #     if len(self.msg_buf) < 4 + length:
+                    #         break
+                    #     inst = json.loads(self.msg_buf[4:4 + length])
+                    #     self.msg_buf = self.msg_buf[4+length:]
+                    #     print inst
+                    print '\nmessage from server:'+data
+                else:
+                    self.sock.shutdown(socket.SHUT_WR)
 
 class Client(object):
 
@@ -24,6 +54,7 @@ class Client(object):
         print "Connecting to server..."
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.connect(self.serv_address)
+
         print "Login or Register an account:"
 
         opt = raw_input().strip()
@@ -62,8 +93,20 @@ class Client(object):
             print "\nLogin or Register an account:"
             opt = raw_input().strip()
 
-    def readRcvData(self, data):
-        pass
+
+    def joinLobby(self):
+        self.sendAll('Hello')
+
+    def sendAll(self, msg):
+        tbl = {
+            Constant.INSTRUCTION: Instructions.SENDALL,
+            Constant.NAME: self.name,
+            Constant.MESSAGE: msg
+        }
+        tbl_str = json.dumps(tbl)
+        length = struct.pack('i', len(tbl_str))
+        data = length + tbl_str
+        self.sock.send(data)
 
     def readACK(self, data):
         self.msg_buf += data
@@ -79,7 +122,11 @@ class Client(object):
 
             if result == Instructions.LOGIN_SUCCESS:
                 # login in successfully, into the lobby
-                pass
+                print "join to the lobby"
+                self.rcv_thread = RcvThread(self.msg_buf, self.sock)
+                self.msg_buf = ""
+                self.rcv_thread.start()
+                result = self.joinLobby()
         else:
             result = Instructions.WRONG_DATA
             self.outputResult(result)
@@ -93,6 +140,7 @@ class Client(object):
         self.sock.close()
 
     def login(self, name, password):
+        self.name = name
         tbl = {
             Constant.INSTRUCTION: Instructions.LOGIN,
             Constant.NAME: name,
