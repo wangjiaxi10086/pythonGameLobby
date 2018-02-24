@@ -2,6 +2,10 @@ import socket
 import select
 import struct
 import json
+import os
+from Instruction import Instructions
+from Instruction import Constant
+
 
 class Lobby(object):
 
@@ -9,11 +13,17 @@ class Lobby(object):
         self.address = ('', 41119)
         self.listen_num = 64
         self.message_buffer = {}    # data buffer
+        self.user_data = {}         # store user data
+        self.user_sock = {}
         self.read_list = []
         self.write_list = []
         self.except_list = []
+        self.user_path = os.getcwd() + "\\userdata"
+        if not os.path.exists(self.user_path):
+            os.mkdir(self.user_path)
 
     def startLobby(self):
+        print "Lobby is starting"
         listenfd = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         listenfd.bind(self.address)
         listenfd.listen(self.listen_num)
@@ -55,16 +65,48 @@ class Lobby(object):
         msg = self.message_buffer[sock]
         while len(msg) > 4:
             length = struct.unpack('i', data[0:4])[0]
-            if len(msg) >= 4 + length:
-                inst = msg[4:4 + length]
-                self.operateInst(inst)
-                msg = msg[4 + length:]
+            if len(msg) < 4 + length:
+                break
+            inst = msg[4:4 + length]
+            self.operateInst(sock, inst)
+            msg = msg[4 + length:]
         self.message_buffer[sock] = msg
 
-    def operateInst(self, inst):
+    def operateInst(self, sock, inst):
         tlb = json.loads(inst)
         print tlb
-        
+        if Constant.INSTRUCTION in tlb.keys():
+            if tlb[Constant.INSTRUCTION] == Instructions.REGISTER:
+                self.user_register(sock, tlb)
+            elif tlb[Constant.INSTRUCTION] == Instructions.LOGIN:
+                pass
+
+    def user_register(self, sock, inst):
+        if not os.path.exists(self.user_path):
+            os.mkdir(self.user_path)
+        user_list = os.listdir(self.user_path)
+        name = inst[Constant.NAME]
+        if name in user_list:
+            # user name is already exists
+            tbl = {
+                Constant.FEEDBACK: Instructions.USER_ALREADY_EXIST,
+            }
+        else:
+            with open(self.user_path + '\\' + name, 'w') as user_file:
+                user_data = {
+                    Constant.NAME: inst[Constant.NAME],
+                    Constant.PASSWORD: inst[Constant.PASSWORD],
+                    Constant.TIMEVAL: 0.0,
+                }
+                user_str = json.dumps(user_data)
+                user_file.write(user_str)
+            tbl = {
+                Constant.FEEDBACK: Instructions.SUCCESS,
+            }
+        back_data = json.dumps(tbl)
+        length = struct.pack('i', len(back_data))
+        sock.send(length + back_data)
+
 
 
 

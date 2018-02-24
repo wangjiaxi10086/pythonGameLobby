@@ -1,5 +1,6 @@
 import struct
 import json
+import os
 
 if __name__ == '__main__':
     a = 20
@@ -14,3 +15,9 @@ if __name__ == '__main__':
 
     cla = json.loads(cla_str)
     print cla
+
+    print os.getcwd()
+    print os.listdir(os.getcwd() + "\\server")
+
+    with open('asdf', 'w') as f:
+        pass
