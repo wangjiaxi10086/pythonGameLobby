@@ -4,18 +4,27 @@ import struct
 from Instruction import Instructions
 from Instruction import Constant
 
+
 class Client(object):
 
     def __init__(self):
         self.serv_address = ("127.0.0.1", 41119)
         self.msg_buf = ""
+        self.Words = {
+            Instructions.REGISTER_SUCCESS: "Register Successfully!",
+            Instructions.LOGIN_SUCCESS: "Login in Successfully!",
+            Instructions.USER_ALREADY_EXIST: "Wrong! Name Already Exists!",
+            Instructions.WRONG_DATA: "Wrong! Data is Broken",
+            Instructions.USER_NOT_EXIST: "Wrong! User doesn't Exist!",
+            Instructions.WRONG_PASSWORD: "Wrong! Password is Wrong!",
+        }
 
     def startClient(self):
         print "Client starting"
         print "Connecting to server..."
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.connect(self.serv_address)
-        print "Login or Register an account."
+        print "Login or Register an account:"
 
         opt = raw_input().strip()
         while opt != "exit":
@@ -42,7 +51,7 @@ class Client(object):
                 self.closeClient()
             else:
                 if data:
-                    result = self.readFeedback(data)
+                    result = self.readACK(data)
                 else:
                     print "Server closed"
                     self.closeClient()
@@ -50,28 +59,35 @@ class Client(object):
             if result < 0:
                 break
 
-            print "Login or Register an account."
+            print "\nLogin or Register an account:"
             opt = raw_input().strip()
 
+    def readRcvData(self, data):
+        pass
 
-    def readFeedback(self, data):
+    def readACK(self, data):
         self.msg_buf += data
         if len(self.msg_buf) > 4:
             length = struct.unpack('i', self.msg_buf[0:4])[0]
             if len(self.msg_buf) < 4 + length:
                 return Instructions.WRONG_DATA
-            tlb = json.loads(self.msg_buf[4:4+length])
-            print tlb
-            self.msg_buf = self.msg_buf[4+length:]
+            tlb = json.loads(self.msg_buf[4:4 + length])
+
+            self.msg_buf = self.msg_buf[4 + length:]
             result = tlb[Constant.FEEDBACK]
-            if result == Instructions.SUCCESS:
-                print "Register Successfully"
-            elif result == Instructions.USER_ALREADY_EXIST:
-                print "Wrong! Name Already Exists!"
+            self.outputResult(result)
+
+            if result == Instructions.LOGIN_SUCCESS:
+                # login in successfully, into the lobby
+                pass
         else:
             result = Instructions.WRONG_DATA
+            self.outputResult(result)
         return result
 
+    def outputResult(self, result):
+        if result in self.Words.keys():
+            print self.Words[result]
 
     def closeClient(self):
         self.sock.close()
