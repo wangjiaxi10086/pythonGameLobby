@@ -3,6 +3,7 @@ import select
 import struct
 import json
 import os
+import datetime
 from Instruction import Instructions
 from Instruction import Constant
 
@@ -16,6 +17,7 @@ class Lobby(object):
         self.message_buffer = {}    # data buffer
         self.user_data = {}         # store user data
         self.user_sock = {}
+        self.user_login_time = {}
 
         self.read_list = []
         self.write_list = []
@@ -65,9 +67,17 @@ class Lobby(object):
             user_name = user_data[Constant.NAME]
             self.user_data.pop(sock)
             self.user_sock.pop(user_name)
+
+            now_time = datetime.datetime.now()
+            timeval = (now_time - self.user_login_time[sock]).total_seconds()
+            print timeval
+            user_data[Constant.TIMEVAL] += timeval
+            self.user_login_time.pop(sock)
+
             # update user data to file
             with open(self.user_path + '\\' + user_name, 'w') as user_file:
                 data_str = json.dumps(user_data)
+                print data_str
                 user_file.write(data_str)
         sock.close()
 
@@ -89,25 +99,26 @@ class Lobby(object):
         tbl = json.loads(inst)
         if Constant.INSTRUCTION in tbl.keys():
             if tbl[Constant.INSTRUCTION] == Instructions.REGISTER:
-                print "user register from", sock.getpeername()
                 self.userRegister(sock, tbl)
             elif tbl[Constant.INSTRUCTION] == Instructions.LOGIN:
-                print "user", sock.getpeername(), "login"
                 self.userLogin(sock, tbl)
 
     def userLogin(self, sock, inst):
-
         name = inst[Constant.NAME]
+        print "user", sock.getpeername(), "login with name:", name
         password = inst[Constant.PASSWORD]
         if name in self.user_sock.keys():
             # user is already login
             old_sock = self.user_sock[name]
-            user_data = self.user_data[old_sock]
             # close old sock
             self.closeClient(old_sock)
 
+            with open(self.user_path + '\\' + name, 'r') as user_file:
+                user_data = json.loads(user_file.read())
+
             self.user_sock[name] = sock
             self.user_data[sock] = user_data
+            self.user_login_time[sock] = datetime.datetime.now()
 
             tbl = {
                 Constant.FEEDBACK: Instructions.LOGIN_SUCCESS,
@@ -130,6 +141,7 @@ class Lobby(object):
                     }
                     self.user_sock[name] = sock
                     self.user_data[sock] = user_data
+                    self.user_login_time[sock] = datetime.datetime.now()
                 else:
                     # password is wrong
                     tbl = {
@@ -146,6 +158,7 @@ class Lobby(object):
         self.sendMsg(sock, back_data)
 
     def userRegister(self, sock, inst):
+        print "user register from", sock.getpeername()
         if not os.path.exists(self.user_path):
             os.mkdir(self.user_path)
         user_list = os.listdir(self.user_path)

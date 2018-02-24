@@ -1,8 +1,13 @@
 import struct
 import json
 import os
+import datetime
 
 if __name__ == '__main__':
+    time1 = datetime.datetime.now()
+    print time1
+
+
     a = 20
     s = struct.pack('i', a)
     print repr(s)
@@ -19,5 +24,5 @@ if __name__ == '__main__':
     print os.getcwd()
     print os.listdir(os.getcwd() + "\\server")
 
-    with open('asdf', 'w') as f:
-        pass
+    time2 = datetime.datetime.now()
+    print (time2 - time1).microseconds
