@@ -20,20 +20,33 @@ class RcvThread(threading.Thread):
                 data = self.sock.recv(1024)
             except socket.error as e:
                 self.sock.shutdown(socket.SHUT_WR)
+                self.out = True
                 break
             else:
                 if data:
                     self.msg_buf += data
-                    # while len(self.msg_buf) > 4:
-                    #     length = struct.unpack('i', self.msg_buf[0:4])[0]
-                    #     if len(self.msg_buf) < 4 + length:
-                    #         break
-                    #     inst = json.loads(self.msg_buf[4:4 + length])
-                    #     self.msg_buf = self.msg_buf[4+length:]
-                    #     print inst
-                    print '\nmessage from server:'+data
+                    while len(self.msg_buf) > 4:
+                        length = struct.unpack('i', self.msg_buf[0:4])[0]
+                        if len(self.msg_buf) < 4 + length:
+                            break
+                        inst = json.loads(self.msg_buf[4:4 + length])
+                        self.msg_buf = self.msg_buf[4+length:]
+                        self.readMsg(inst)
                 else:
                     self.sock.shutdown(socket.SHUT_WR)
+                    self.out = True
+                    break
+
+    def readMsg(self, inst):
+        if Constant.LOCATION in inst.keys():
+            if inst[Constant.LOCATION] == Constant.LOBBY:
+                self.readLobbyMsg(inst)
+
+    def readLobbyMsg(self, inst):
+        name = inst[Constant.NAME]
+        msg = inst[Constant.MESSAGE]
+        print '\n(Lobby) [{0}]: {1}'.format(name, msg)
+
 
 class Client(object):
 
@@ -47,6 +60,7 @@ class Client(object):
             Instructions.WRONG_DATA: "Wrong! Data is Broken",
             Instructions.USER_NOT_EXIST: "Wrong! User doesn't Exist!",
             Instructions.WRONG_PASSWORD: "Wrong! Password is Wrong!",
+            Instructions.SERVER_CLOSED: "Wrong! Server is Closed!",
         }
 
     def startClient(self):
@@ -77,14 +91,15 @@ class Client(object):
             try:
                 data = self.sock.recv(1024)
             except socket.error as e:
-                print "Server closed"
                 result = Instructions.SERVER_CLOSED
+                self.outputResult(result)
                 self.closeClient()
             else:
                 if data:
                     result = self.readACK(data)
                 else:
-                    print "Server closed"
+                    result = Instructions.SERVER_CLOSED
+                    self.outputResult(result)
                     self.closeClient()
                     result = Instructions.SERVER_CLOSED
             if result < 0:
@@ -93,9 +108,26 @@ class Client(object):
             print "\nLogin or Register an account:"
             opt = raw_input().strip()
 
-
     def joinLobby(self):
-        self.sendAll('Hello')
+        print "join to the lobby"
+
+        in_str = raw_input('>>> ').strip()
+        if self.rcv_thread.out:
+            self.outputResult(Instructions.SERVER_CLOSED)
+            exit(0)
+        while in_str != 'exit':
+            if in_str.startswith(Constant.CHAT_ALL):
+                send_str = in_str[len(Constant.CHAT_ALL):].strip()
+                self.sendAll(send_str)
+            elif in_str.startswith(Constant.CHAT):
+                send_str = in_str[len(Constant.CHAT):].strip()
+
+            in_str = raw_input('>>> ').strip()
+            if self.rcv_thread.out:
+                self.outputResult(Instructions.SERVER_CLOSED)
+                exit(0)
+
+        return 0
 
     def sendAll(self, msg):
         tbl = {
@@ -104,9 +136,7 @@ class Client(object):
             Constant.MESSAGE: msg
         }
         tbl_str = json.dumps(tbl)
-        length = struct.pack('i', len(tbl_str))
-        data = length + tbl_str
-        self.sock.send(data)
+        self.sendData(tbl_str)
 
     def readACK(self, data):
         self.msg_buf += data
@@ -122,7 +152,6 @@ class Client(object):
 
             if result == Instructions.LOGIN_SUCCESS:
                 # login in successfully, into the lobby
-                print "join to the lobby"
                 self.rcv_thread = RcvThread(self.msg_buf, self.sock)
                 self.msg_buf = ""
                 self.rcv_thread.start()
@@ -148,9 +177,7 @@ class Client(object):
         }
         tbl_str = json.dumps(tbl)
         # print len(tbl_str)
-        length = struct.pack('i', len(tbl_str))
-        data = length + tbl_str
-        self.sock.send(data)
+        self.sendData(tbl_str)
 
     def register(self, name, password):
         tbl = {
@@ -159,8 +186,16 @@ class Client(object):
             Constant.PASSWORD: password
         }
         tbl_str = json.dumps(tbl)
-        length = struct.pack('i', len(tbl_str))
-        data = length + tbl_str
-        self.sock.send(data)
+        self.sendData(tbl_str)
+
+    def sendData(self, msg_str):
+        try:
+            length = struct.pack('i', len(msg_str))
+            data = length + msg_str
+            self.sock.send(data)
+        except socket.error as e:
+            print 'Server is Closed'
+            exit(0)
+
 
 

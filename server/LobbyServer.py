@@ -101,7 +101,21 @@ class Lobby(object):
             elif tbl[Constant.INSTRUCTION] == Instructions.LOGIN:
                 self.userLogin(sock, tbl)
             elif tbl[Constant.INSTRUCTION] == Instructions.SENDALL:
-                sock.send('Hello')
+                self.sendALL(sock, tbl)
+
+    def sendALL(self, sock, inst):
+        # ensure user is already login
+        if sock in self.user_data.keys():
+            print 'user: {0} send all message: [{1}]'.format(inst[Constant.NAME], inst[Constant.MESSAGE])
+            tbl = {
+                Constant.NAME: inst[Constant.NAME],
+                Constant.MESSAGE: inst[Constant.MESSAGE],
+                Constant.LOCATION: Constant.LOBBY
+            }
+            send_data = json.dumps(tbl)
+            for user in self.user_data.keys():
+                if user != sock:
+                    self.sendMsg(user, send_data)
 
     def userLogin(self, sock, inst):
         name = inst[Constant.NAME]

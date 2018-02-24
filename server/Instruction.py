@@ -30,7 +30,14 @@ class Constant:
     TIMEVAL = 'timeval'
     FEEDBACK = 'feedback'
     DESTINATION = 'dest'
+    SOURCE = 'sour'
     MESSAGE = 'msg'
+
+    CHAT_ALL = 'chatall'
+    CHAT_ROOM = 'chatroom'
+    CHAT = 'chat'
+    LOCATION = 'loc'
+    LOBBY = 'lobby'
 
     def __init__(self):
         pass
