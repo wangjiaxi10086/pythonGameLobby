@@ -1,5 +1,4 @@
 
-
 class Instructions:
 
     REGISTER = 1
@@ -10,11 +9,13 @@ class Instructions:
     CREATE_ROOM = 6
     ENTER_ROOM = 7
     LIST_ROOM = 8
+    LEAVE_ROOM = 9
 
     REGISTER_SUCCESS = 1000
     LOGIN_SUCCESS = 1001
     CREATE_ROOM_SUCCESS = 1002
     ENTER_ROOM_SUCCESS = 1003
+    LEAVE_ROOM_SUCCESS = 1004
 
     USER_ALREADY_EXIST = 10000
     USER_NOT_EXIST = 10001
@@ -23,6 +24,7 @@ class Instructions:
     ROOM_ALREADY_EXIST = 10004
     ROOM_NOT_EXIST = 10005
     ALREADY_IN_ROOM = 10006
+    NOT_IN_ROOM = 10007
 
     SERVER_CLOSED = -1
     WRONG_DATA = -2
@@ -50,13 +52,12 @@ class Constant:
     CREATE_ROOM = 'createroom'
     ENTER_ROOM = 'enterroom'
     LIST_ROOM = 'listroom'
+    LEAVE_ROOM = 'leaveroom'
 
     ALL_ROOMS = 'allroom'
     ROOM_NAME = 'rname'
     LOCATION = 'loc'
     LOBBY = 'lobby'
-
-
 
     def __init__(self):
         pass

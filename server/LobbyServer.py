@@ -115,6 +115,33 @@ class Lobby(object):
                 self.enterRoom(sock, tbl)
             elif tbl[Constant.INSTRUCTION] == Instructions.LIST_ROOM:
                 self.listRoom(sock, tbl)
+            elif tbl[Constant.INSTRUCTION] == Instructions.LEAVE_ROOM:
+                self.leaveRoom(sock, tbl)
+
+    def leaveRoom(self, sock, inst):
+        if sock in self.user_data.keys():
+            print '[{0}] leave current room.'.format(inst[Constant.NAME])
+            if Constant.CURRENT_ROOM in self.user_data[sock].keys():
+                cur_room = self.user_data[sock][Constant.CURRENT_ROOM]
+            else:
+                cur_room = None
+
+            if cur_room:
+                tbl = {
+                    Constant.INSTRUCTION: Instructions.ACK,
+                    Constant.FEEDBACK: Instructions.LEAVE_ROOM_SUCCESS,
+                    Constant.ROOM_NAME: cur_room
+                }
+                self.user_data[sock][Constant.CURRENT_ROOM] = None
+                self.outofRoom(sock, cur_room)
+            # is not in any room
+            else:
+                tbl = {
+                    Constant.INSTRUCTION: Instructions.ACK,
+                    Constant.FEEDBACK: Instructions.NOT_IN_ROOM
+                }
+            send_data = json.dumps(tbl)
+            self.sendMsg(sock, send_data)
 
     def listRoom(self, sock, inst):
         if sock in self.user_data.keys():
@@ -157,7 +184,6 @@ class Lobby(object):
             send_data = json.dumps(tbl)
             self.sendMsg(sock, send_data)
 
-
     def outofRoom(self, sock, room_name):
         # leave the current room, if on one in this room, then delete this room
         if room_name and room_name in self.room_list:
@@ -197,7 +223,6 @@ class Lobby(object):
                 }
             send_data = json.dumps(tbl)
             self.sendMsg(sock, send_data)
-
 
     def sendALL(self, sock, inst):
         # ensure user is already login

@@ -43,16 +43,23 @@ class RcvThread(threading.Thread):
         elif inst[Constant.INSTRUCTION] == Instructions.LIST_ROOM:
             self.listRoom(inst)
         elif inst[Constant.INSTRUCTION] == Instructions.ACK:
-            if inst[Constant.FEEDBACK] == Instructions.ROOM_ALREADY_EXIST:
-                print '\n(Server) Room [{0}] is already existed.'.format(inst[Constant.ROOM_NAME])
-            elif inst[Constant.FEEDBACK] == Instructions.CREATE_ROOM_SUCCESS:
-                print '\n(Server) Room [{0}] creates successfully.'.format(inst[Constant.ROOM_NAME])
-            elif inst[Constant.FEEDBACK] == Instructions.ALREADY_IN_ROOM:
-                print '\n(Server) Already in room: [{0}].'.format(inst[Constant.ROOM_NAME])
-            elif inst[Constant.FEEDBACK] == Instructions.ROOM_NOT_EXIST:
-                print "\n(Server) Room [{0}] doesn't exist.".format(inst[Constant.ROOM_NAME])
-            elif inst[Constant.FEEDBACK] == Instructions.ENTER_ROOM_SUCCESS:
-                print '\n(Server) Enter room [{0}] successfully'.format(inst[Constant.ROOM_NAME])
+            self.optAck(inst)
+
+    def optAck(self, inst):
+        if inst[Constant.FEEDBACK] == Instructions.ROOM_ALREADY_EXIST:
+            print '\n(Server) Room [{0}] is already existed.'.format(inst[Constant.ROOM_NAME])
+        elif inst[Constant.FEEDBACK] == Instructions.CREATE_ROOM_SUCCESS:
+            print '\n(Server) Room [{0}] creates successfully.'.format(inst[Constant.ROOM_NAME])
+        elif inst[Constant.FEEDBACK] == Instructions.ALREADY_IN_ROOM:
+            print '\n(Server) Already in room: [{0}].'.format(inst[Constant.ROOM_NAME])
+        elif inst[Constant.FEEDBACK] == Instructions.ROOM_NOT_EXIST:
+            print "\n(Server) Room [{0}] doesn't exist.".format(inst[Constant.ROOM_NAME])
+        elif inst[Constant.FEEDBACK] == Instructions.ENTER_ROOM_SUCCESS:
+            print '\n(Server) Enter room [{0}] successfully'.format(inst[Constant.ROOM_NAME])
+        elif inst[Constant.FEEDBACK] == Instructions.LEAVE_ROOM_SUCCESS:
+            print '\n(Server) Leave room[{0}] successfully'.format(inst[Constant.ROOM_NAME])
+        elif inst[Constant.FEEDBACK] == Instructions.NOT_IN_ROOM:
+            print '\n(Server) Not in any room now.'
 
     def listRoom(self, inst):
         room_list = inst[Constant.ALL_ROOMS]

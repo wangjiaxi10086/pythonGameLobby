@@ -61,19 +61,19 @@ class Client(object):
                     data = self.sock.recv(1024)
                 except socket.error as e:
                     result = Instructions.SERVER_CLOSED
-                    self.closeClient()
                 else:
                     if data:
                         result = self.readACK(data)
                     else:
                         result = Instructions.SERVER_CLOSED
-                        self.closeClient()
                 if result < 0:
                     self.outputResult(result)
                     break
 
             print "\nLogin or Register an account:"
             opt = raw_input().strip()
+
+        self.closeClient()
 
     def checkName(self, name):
         for c in name:
@@ -106,12 +106,23 @@ class Client(object):
             # list all room
             elif in_str.startswith(Constant.LIST_ROOM):
                 self.listRoom()
+            # quit current room
+            elif in_str.startswith(Constant.LEAVE_ROOM):
+                self.leaveRoom()
 
             in_str = raw_input(self.name + '>>> ').strip()
             if self.rcv_thread.out:
                 return Instructions.SERVER_CLOSED
 
         return 0
+
+    def leaveRoom(self):
+        tbl = {
+            Constant.INSTRUCTION: Instructions.LEAVE_ROOM,
+            Constant.NAME: self.name
+        }
+        tbl_str = json.dumps(tbl)
+        self.sendData(tbl_str)
 
     def listRoom(self):
         tbl = {
@@ -176,8 +187,7 @@ class Client(object):
             print self.Words[result]
 
     def closeClient(self):
-        self.sock.close()
-        exit(0)
+        self.sock.shutdown(socket.SHUT_RDWR)
 
     def login(self, name, password):
         self.name = name
