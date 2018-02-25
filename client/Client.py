@@ -45,6 +45,12 @@ class RcvThread(threading.Thread):
                 print '\n(Server) Room [{0}] is already existed.'.format(inst[Constant.ROOM_NAME])
             elif inst[Constant.FEEDBACK] == Instructions.CREATE_ROOM_SUCCESS:
                 print '\n(Server) Room [{0}] creates successfully.'.format(inst[Constant.ROOM_NAME])
+            elif inst[Constant.FEEDBACK] == Instructions.ALREADY_IN_ROOM:
+                print '\n(Server) Already in room: [{0}].'.format(inst[Constant.ROOM_NAME])
+            elif inst[Constant.FEEDBACK] == Instructions.ROOM_NOT_EXIST:
+                print "\n(Server) Room [{0}] doesn't exist.".format(inst[Constant.ROOM_NAME])
+            elif inst[Constant.FEEDBACK] == Instructions.ENTER_ROOM_SUCCESS:
+                print '\n(Server) Enter room [{0}] successfully'.format(inst[Constant.ROOM_NAME])
 
     def readLobbyMsg(self, inst):
         name = inst[Constant.NAME]
@@ -130,7 +136,7 @@ class Client(object):
     def joinLobby(self):
         print "join to the lobby"
 
-        in_str = raw_input('>>> ').strip()
+        in_str = raw_input(self.name + '>>> ').strip()
         if self.rcv_thread.out:
             return Instructions.SERVER_CLOSED
         while in_str != 'exit':
@@ -145,12 +151,25 @@ class Client(object):
                     self.createRoom(room_name)
                 else:
                     self.outputResult(Instructions.WRONG_NAME)
+            # enter a room
+            elif in_str.startswith(Constant.ENTER_ROOM):
+                room_name = in_str[len(Constant.CREATE_ROOM):].strip()
+                self.enterRoom(room_name)
 
-            in_str = raw_input('>>> ').strip()
+            in_str = raw_input(self.name + '>>> ').strip()
             if self.rcv_thread.out:
                 return Instructions.SERVER_CLOSED
 
         return 0
+
+    def enterRoom(self, room_name):
+        tbl = {
+            Constant.INSTRUCTION: Instructions.ENTER_ROOM,
+            Constant.NAME: self.name,
+            Constant.ROOM_NAME: room_name
+        }
+        tbl_str = json.dumps(tbl)
+        self.sendData(tbl_str)
 
     def createRoom(self, room_name):
         tbl = {

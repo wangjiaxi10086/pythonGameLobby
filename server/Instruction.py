@@ -8,16 +8,20 @@ class Instructions:
     SEND = 4
     SENDALL = 5
     CREATE_ROOM = 6
+    ENTER_ROOM = 7
 
     REGISTER_SUCCESS = 1000
     LOGIN_SUCCESS = 1001
     CREATE_ROOM_SUCCESS = 1002
+    ENTER_ROOM_SUCCESS = 1003
 
     USER_ALREADY_EXIST = 10000
     USER_NOT_EXIST = 10001
     WRONG_PASSWORD = 10002
     WRONG_NAME = 10003
     ROOM_ALREADY_EXIST = 10004
+    ROOM_NOT_EXIST = 10005
+    ALREADY_IN_ROOM = 10006
 
     SERVER_CLOSED = -1
     WRONG_DATA = -2
@@ -43,6 +47,7 @@ class Constant:
     CHAT_ROOM = 'chatroom'
     CHAT = 'chat'
     CREATE_ROOM = 'createroom'
+    ENTER_ROOM = 'enterroom'
     ROOM_NAME = 'rname'
     LOCATION = 'loc'
     LOBBY = 'lobby'
