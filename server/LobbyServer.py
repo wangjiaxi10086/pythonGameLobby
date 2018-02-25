@@ -113,6 +113,18 @@ class Lobby(object):
                 self.createRoom(sock, tbl)
             elif tbl[Constant.INSTRUCTION] == Instructions.ENTER_ROOM:
                 self.enterRoom(sock, tbl)
+            elif tbl[Constant.INSTRUCTION] == Instructions.LIST_ROOM:
+                self.listRoom(sock, tbl)
+
+    def listRoom(self, sock, inst):
+        if sock in self.user_data.keys():
+            print '[{0}] list all rooms.'.format(inst[Constant.NAME])
+            tbl = {
+                Constant.INSTRUCTION: Instructions.LIST_ROOM,
+                Constant.ALL_ROOMS: self.room_list.keys(),
+            }
+            send_data = json.dumps(tbl)
+            self.sendMsg(sock, send_data)
 
     def enterRoom(self, sock, inst):
         if sock in self.user_data.keys():

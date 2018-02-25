@@ -9,6 +9,7 @@ class Instructions:
     SENDALL = 5
     CREATE_ROOM = 6
     ENTER_ROOM = 7
+    LIST_ROOM = 8
 
     REGISTER_SUCCESS = 1000
     LOGIN_SUCCESS = 1001
@@ -48,6 +49,9 @@ class Constant:
     CHAT = 'chat'
     CREATE_ROOM = 'createroom'
     ENTER_ROOM = 'enterroom'
+    LIST_ROOM = 'listroom'
+
+    ALL_ROOMS = 'allroom'
     ROOM_NAME = 'rname'
     LOCATION = 'loc'
     LOBBY = 'lobby'
