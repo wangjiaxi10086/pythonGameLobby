@@ -121,6 +121,10 @@ class Client(object):
             # quit current room
             elif in_str.startswith(Constant.LEAVE_ROOM):
                 self.leaveRoom()
+            # chat with some only
+            elif in_str.startswith(Constant.CHAT_WITH):
+                data_str = in_str[len(Constant.CHAT_WITH):].strip()
+                self.sendWith(data_str)
             # help
             elif in_str.startswith(Constant.HELP):
                 pass
@@ -131,6 +135,26 @@ class Client(object):
 
         self.closeClient()
         return 0
+
+    def sendWith(self, data):
+        name_len = 0
+        for c in data:
+            name_len += 1
+            if str.isspace(c):
+                break
+        des_name = data[:name_len].strip()
+        msg = data[name_len:].strip()
+        if self.checkName(des_name):
+            tbl = {
+                Constant.INSTRUCTION: Instructions.SENDTO,
+                Constant.NAME: self.name,
+                Constant.DESTINATION: des_name,
+                Constant.MESSAGE: msg
+            }
+            tbl_str = json.dumps(tbl)
+            self.sendData(tbl_str)
+        else:
+            self.outputResult(Instructions.WRONG_NAME)
 
     def listRoomUser(self):
         tbl = {
@@ -249,7 +273,7 @@ class Client(object):
             self.sock.send(data)
         except socket.error as e:
             self.outputResult(Instructions.SERVER_CLOSED)
-            exit(0)
+            self.closeClient()
 
 
 

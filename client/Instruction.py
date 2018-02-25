@@ -5,7 +5,7 @@ class Instructions:
     REGISTER = 1
     LOGIN = 2
     ACK = 3
-    SEND = 4
+    SENDTO = 4
     SENDALL = 5
     CREATE_ROOM = 6
     ENTER_ROOM = 7
@@ -30,6 +30,7 @@ class Instructions:
     ROOM_NOT_EXIST = 10005
     ALREADY_IN_ROOM = 10006
     NOT_IN_ROOM = 10007
+    USER_NOT_ONLINE = 10008
 
     SERVER_CLOSED = -1
     WRONG_DATA = -2
@@ -53,7 +54,7 @@ class Constant:
 
     CHAT_ALL = 'chatall'
     CHAT_ROOM = 'chatroom'
-    CHAT = 'chat'
+    CHAT_WITH = 'chatwith'
     CREATE_ROOM = 'createroom'
     ENTER_ROOM = 'enterroom'
     LIST_ROOM = 'listroom'
@@ -66,7 +67,6 @@ class Constant:
     LOCATION = 'loc'
     LOBBY = 'lobby'
     ROOM_USER = 'ruser'
-
 
     def __init__(self):
         pass

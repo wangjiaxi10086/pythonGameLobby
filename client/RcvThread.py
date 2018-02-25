@@ -2,6 +2,7 @@ import json
 import struct
 import threading
 import socket
+import datetime
 from Instruction import Instructions
 from Instruction import Constant
 
@@ -38,6 +39,7 @@ class RcvThread(threading.Thread):
                     break
 
     def readMsg(self, inst):
+        self.time_now = datetime.datetime.now().strftime('%H:%M:%S')
         if inst[Constant.INSTRUCTION] == Instructions.SENDALL:
             self.readLobbyMsg(inst)
         elif inst[Constant.INSTRUCTION] == Instructions.SEND_ROOM:
@@ -48,6 +50,13 @@ class RcvThread(threading.Thread):
             self.optAck(inst)
         elif inst[Constant.INSTRUCTION] == Instructions.LIST_ROOM_USER:
             self.listRoomUser(inst)
+        elif inst[Constant.INSTRUCTION] == Instructions.SENDTO:
+            self.readPrivateMsg(inst)
+
+    def readPrivateMsg(self, inst):
+        sour_name = inst[Constant.NAME]
+        msg = inst[Constant.MESSAGE]
+        print '\n{0} (Private) [{1}]: {2}'.format(self.time_now, sour_name, msg)
 
     def listRoomUser(self, inst):
         user_list = inst[Constant.ROOM_USER]
@@ -64,12 +73,12 @@ class RcvThread(threading.Thread):
         name = inst[Constant.NAME]
         msg = inst[Constant.MESSAGE]
         room_name = inst[Constant.ROOM_NAME]
-        print '\n(Room: {0}) [{1}]: {2}'.format(room_name, name, msg)
+        print '\n{0} (Room: {1}) [{2}]: {3}'.format(self.time_now, room_name, name, msg)
 
     def readLobbyMsg(self, inst):
         name = inst[Constant.NAME]
         msg = inst[Constant.MESSAGE]
-        print '\n(Lobby) [{0}]: {1}'.format(name, msg)
+        print '\n{0} (Lobby) [{1}]: {2}'.format(self.time_now, name, msg)
 
     def optAck(self, inst):
         if inst[Constant.FEEDBACK] == Instructions.ROOM_ALREADY_EXIST:
@@ -86,6 +95,8 @@ class RcvThread(threading.Thread):
             print '\n(Server) Leave room[{0}] successfully'.format(inst[Constant.ROOM_NAME])
         elif inst[Constant.FEEDBACK] == Instructions.NOT_IN_ROOM:
             print '\n(Server) Not in any room now.'
+        elif inst[Constant.FEEDBACK] == Instructions.USER_NOT_ONLINE:
+            print '\n(Server) user {0} is not online.'.format(inst[Constant.DESTINATION])
 
     def listRoom(self, inst):
         room_list = inst[Constant.ALL_ROOMS]

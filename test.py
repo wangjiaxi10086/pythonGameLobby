@@ -5,7 +5,7 @@ import datetime
 
 if __name__ == '__main__':
     time1 = datetime.datetime.now()
-    print time1
+    print time1.strftime('%H:%M:%S')
 
 
     a = 20
@@ -24,5 +24,3 @@ if __name__ == '__main__':
     print os.getcwd()
     print os.listdir(os.getcwd() + "\\server")
 
-    time2 = datetime.datetime.now()
-    print (time2 - time1).microseconds

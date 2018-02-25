@@ -121,6 +121,34 @@ class Lobby(object):
                 self.sendRoom(sock, tbl)
             elif tbl[Constant.INSTRUCTION] == Instructions.LIST_ROOM_USER:
                 self.listRoomUser(sock, tbl)
+            elif tbl[Constant.INSTRUCTION] == Instructions.SENDTO:
+                self.sendWith(sock, tbl)
+
+    def sendWith(self, sock, inst):
+        if sock in self.user_data.keys():
+            des_name = inst[Constant.DESTINATION]
+            name = inst[Constant.NAME]
+            msg = inst[Constant.MESSAGE]
+            print '[{0}] send msg to [{1}]: [{2}]'.format(name, des_name, msg)
+            # des user is not online
+            if des_name not in self.user_sock.keys():
+                tbl = {
+                    Constant.INSTRUCTION: Instructions.ACK,
+                    Constant.DESTINATION: des_name,
+                    Constant.FEEDBACK: Instructions.USER_NOT_ONLINE,
+                }
+                send_data = json.dumps(tbl)
+                self.sendMsg(sock, send_data)
+            # send message to user
+            else:
+                tbl = {
+                    Constant.INSTRUCTION: Instructions.SENDTO,
+                    Constant.DESTINATION: des_name,
+                    Constant.NAME: name,
+                    Constant.MESSAGE: msg
+                }
+                send_data = json.dumps(tbl)
+                self.sendMsg(self.user_sock[des_name], send_data)
 
     def listRoomUser(self, sock, inst):
         if sock in self.user_data.keys():
