@@ -38,9 +38,13 @@ class RcvThread(threading.Thread):
                     break
 
     def readMsg(self, inst):
-        if Constant.LOCATION in inst.keys():
-            if inst[Constant.LOCATION] == Constant.LOBBY:
-                self.readLobbyMsg(inst)
+        if inst[Constant.INSTRUCTION] == Instructions.SENDALL:
+            self.readLobbyMsg(inst)
+        elif inst[Constant.INSTRUCTION] == Instructions.ACK:
+            if inst[Constant.FEEDBACK] == Instructions.ROOM_ALREADY_EXIST:
+                print '\n(Server) Room [{0}] is already existed.'.format(inst[Constant.ROOM_NAME])
+            elif inst[Constant.FEEDBACK] == Instructions.CREATE_ROOM_SUCCESS:
+                print '\n(Server) Room [{0}] creates successfully.'.format(inst[Constant.ROOM_NAME])
 
     def readLobbyMsg(self, inst):
         name = inst[Constant.NAME]
@@ -61,6 +65,7 @@ class Client(object):
             Instructions.USER_NOT_EXIST: "Wrong! User doesn't Exist!",
             Instructions.WRONG_PASSWORD: "Wrong! Password is Wrong!",
             Instructions.SERVER_CLOSED: "Wrong! Server is Closed!",
+            Instructions.WRONG_NAME: "Wrong! Name Should Nnly be Char, Digit or '_'",
         }
 
     def startClient(self):
@@ -73,61 +78,88 @@ class Client(object):
 
         opt = raw_input().strip()
         while opt != "exit":
+            right_input = True
             # login
             if opt.startswith("log"):
                 print "Login the account:"
                 name = raw_input("name:").strip()
                 password = raw_input("password:").strip()
-                self.login(name, password)
+                if self.checkName(name):
+                    self.login(name, password)
+                else:
+                    self.outputResult(Instructions.WRONG_NAME)
+                    right_input = False
             # register
             elif opt.startswith("reg"):
                 print "Register an account:"
                 name = raw_input("name:").strip()
                 password = raw_input("password:").strip()
-                self.register(name, password)
-            else:
-                break
-
-            try:
-                data = self.sock.recv(1024)
-            except socket.error as e:
-                result = Instructions.SERVER_CLOSED
-                self.outputResult(result)
-                self.closeClient()
-            else:
-                if data:
-                    result = self.readACK(data)
+                if self.checkName(name):
+                    self.register(name, password)
                 else:
+                    self.outputResult(Instructions.WRONG_NAME)
+                    right_input = False
+            else:
+                right_input = False
+
+            if right_input:
+                try:
+                    data = self.sock.recv(1024)
+                except socket.error as e:
                     result = Instructions.SERVER_CLOSED
-                    self.outputResult(result)
                     self.closeClient()
-                    result = Instructions.SERVER_CLOSED
-            if result < 0:
-                break
+                else:
+                    if data:
+                        result = self.readACK(data)
+                    else:
+                        result = Instructions.SERVER_CLOSED
+                        self.closeClient()
+                if result < 0:
+                    self.outputResult(result)
+                    break
 
             print "\nLogin or Register an account:"
             opt = raw_input().strip()
+
+    def checkName(self, name):
+        for c in name:
+            if not str.isalpha(c) and not str.isdigit(c) and c != '_':
+                return False
+        return True
 
     def joinLobby(self):
         print "join to the lobby"
 
         in_str = raw_input('>>> ').strip()
         if self.rcv_thread.out:
-            self.outputResult(Instructions.SERVER_CLOSED)
-            exit(0)
+            return Instructions.SERVER_CLOSED
         while in_str != 'exit':
+            # send all messages
             if in_str.startswith(Constant.CHAT_ALL):
                 send_str = in_str[len(Constant.CHAT_ALL):].strip()
                 self.sendAll(send_str)
-            elif in_str.startswith(Constant.CHAT):
-                send_str = in_str[len(Constant.CHAT):].strip()
+            # create a new room
+            elif in_str.startswith(Constant.CREATE_ROOM):
+                room_name = in_str[len(Constant.CREATE_ROOM):].strip()
+                if self.checkName(room_name):
+                    self.createRoom(room_name)
+                else:
+                    self.outputResult(Instructions.WRONG_NAME)
 
             in_str = raw_input('>>> ').strip()
             if self.rcv_thread.out:
-                self.outputResult(Instructions.SERVER_CLOSED)
-                exit(0)
+                return Instructions.SERVER_CLOSED
 
         return 0
+
+    def createRoom(self, room_name):
+        tbl = {
+            Constant.INSTRUCTION: Instructions.CREATE_ROOM,
+            Constant.NAME: self.name,
+            Constant.ROOM_NAME: room_name,
+        }
+        tbl_str = json.dumps(tbl)
+        self.sendData(tbl_str)
 
     def sendAll(self, msg):
         tbl = {
@@ -167,6 +199,7 @@ class Client(object):
 
     def closeClient(self):
         self.sock.close()
+        exit(0)
 
     def login(self, name, password):
         self.name = name
@@ -194,7 +227,7 @@ class Client(object):
             data = length + msg_str
             self.sock.send(data)
         except socket.error as e:
-            print 'Server is Closed'
+            self.outputResult(Instructions.SERVER_CLOSED)
             exit(0)
 
 

@@ -7,13 +7,17 @@ class Instructions:
     ACK = 3
     SEND = 4
     SENDALL = 5
+    CREATE_ROOM = 6
 
     REGISTER_SUCCESS = 1000
     LOGIN_SUCCESS = 1001
+    CREATE_ROOM_SUCCESS = 1002
 
     USER_ALREADY_EXIST = 10000
     USER_NOT_EXIST = 10001
     WRONG_PASSWORD = 10002
+    WRONG_NAME = 10003
+    ROOM_ALREADY_EXIST = 10004
 
     SERVER_CLOSED = -1
     WRONG_DATA = -2
@@ -32,12 +36,18 @@ class Constant:
     DESTINATION = 'dest'
     SOURCE = 'sour'
     MESSAGE = 'msg'
+    LAST_LOGIN_TIME = 'last_login_time'
+    CURRENT_ROOM = 'cur_room'
 
     CHAT_ALL = 'chatall'
     CHAT_ROOM = 'chatroom'
     CHAT = 'chat'
+    CREATE_ROOM = 'createroom'
+    ROOM_NAME = 'rname'
     LOCATION = 'loc'
     LOBBY = 'lobby'
+
+
 
     def __init__(self):
         pass

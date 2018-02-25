@@ -15,9 +15,10 @@ class Lobby(object):
         self.listen_num = 64
 
         self.message_buffer = {}    # data buffer
-        self.user_data = {}         # store user data
-        self.user_sock = {}
-        self.user_login_time = {}
+        self.user_data = {}         # sock -> user data
+        self.user_sock = {}         # name -> sock
+
+        self.room_list = {}         # room name -> user list of this room
 
         self.read_list = []
         self.write_list = []
@@ -65,13 +66,19 @@ class Lobby(object):
         if sock in self.user_data.keys():
             user_data = self.user_data[sock]
             user_name = user_data[Constant.NAME]
-            self.user_data.pop(sock)
-            self.user_sock.pop(user_name)
+            cur_room = user_data[Constant.CURRENT_ROOM]
+            user_data[Constant.CURRENT_ROOM] = None
 
             now_time = datetime.datetime.now()
-            timeval = (now_time - self.user_login_time[sock]).total_seconds()
+            timeval = (now_time - user_data[Constant.LAST_LOGIN_TIME]).total_seconds()
             user_data[Constant.TIMEVAL] += timeval
-            self.user_login_time.pop(sock)
+            # change last login time for json dumps
+            user_data[Constant.LAST_LOGIN_TIME] = user_data[Constant.LAST_LOGIN_TIME].strftime('%Y-%m-%d %H:%M:%S')
+
+            # user leave current room
+            self.leaveRoom(sock, cur_room)
+            self.user_data.pop(sock)
+            self.user_sock.pop(user_name)
 
             # update user data to file
             with open(self.user_path + '\\' + user_name, 'w') as user_file:
@@ -102,18 +109,63 @@ class Lobby(object):
                 self.userLogin(sock, tbl)
             elif tbl[Constant.INSTRUCTION] == Instructions.SENDALL:
                 self.sendALL(sock, tbl)
+            elif tbl[Constant.INSTRUCTION] == Instructions.CREATE_ROOM:
+                self.createRoom(sock, tbl)
+
+    def leaveRoom(self, sock, room_name):
+        # leave the current room, if on one in this room, then delete this room
+        if room_name and room_name in self.room_list:
+            self.room_list[room_name].remove(sock)
+            if len(self.room_list[room_name]) == 0:
+                self.room_list.pop(room_name)
+
+    def createRoom(self, sock, inst):
+        if sock in self.user_data.keys():
+            print '[{0}] create room: [{1}].'.format(inst[Constant.NAME], inst[Constant.ROOM_NAME])
+            room_name = inst[Constant.ROOM_NAME]
+            # room is already exists
+            if room_name in self.room_list.keys():
+                tbl = {
+                    Constant.INSTRUCTION: Instructions.ACK,
+                    Constant.FEEDBACK: Instructions.ROOM_ALREADY_EXIST,
+                    Constant.ROOM_NAME: room_name
+                }
+            # create new room and this user enter the new room
+            else:
+                # leave old room
+                if Constant.CURRENT_ROOM in self.user_data[sock].keys():
+                    old_room = self.user_data[sock][Constant.CURRENT_ROOM]
+                else:
+                    old_room = None
+                self.leaveRoom(sock, old_room)
+
+                # create new room
+                self.room_list[room_name] = [sock]
+                print "room list: ", self.room_list
+                self.user_data[sock][Constant.CURRENT_ROOM] = room_name
+
+                tbl = {
+                    Constant.INSTRUCTION: Instructions.ACK,
+                    Constant.FEEDBACK: Instructions.CREATE_ROOM_SUCCESS,
+                    Constant.ROOM_NAME: room_name
+                }
+            send_data = json.dumps(tbl)
+            self.sendMsg(sock, send_data)
+
 
     def sendALL(self, sock, inst):
         # ensure user is already login
         if sock in self.user_data.keys():
-            print 'user: {0} send all message: [{1}]'.format(inst[Constant.NAME], inst[Constant.MESSAGE])
+            print '[{0}] send all message: [{1}]'.format(inst[Constant.NAME], inst[Constant.MESSAGE])
             tbl = {
+                Constant.INSTRUCTION: Instructions.SENDALL,
                 Constant.NAME: inst[Constant.NAME],
                 Constant.MESSAGE: inst[Constant.MESSAGE],
                 Constant.LOCATION: Constant.LOBBY
             }
             send_data = json.dumps(tbl)
             for user in self.user_data.keys():
+                # send message to everyone except oneself
                 if user != sock:
                     self.sendMsg(user, send_data)
 
@@ -132,7 +184,7 @@ class Lobby(object):
 
             self.user_sock[name] = sock
             self.user_data[sock] = user_data
-            self.user_login_time[sock] = datetime.datetime.now()
+            self.user_data[sock][Constant.LAST_LOGIN_TIME] = datetime.datetime.now()
 
             tbl = {
                 Constant.FEEDBACK: Instructions.LOGIN_SUCCESS,
@@ -155,7 +207,8 @@ class Lobby(object):
                     }
                     self.user_sock[name] = sock
                     self.user_data[sock] = user_data
-                    self.user_login_time[sock] = datetime.datetime.now()
+                    self.user_data[sock][Constant.LAST_LOGIN_TIME] = datetime.datetime.now()
+                    self.user_data[sock][Constant.CURRENT_ROOM] = None
                 else:
                     # password is wrong
                     tbl = {
