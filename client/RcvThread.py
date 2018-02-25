@@ -40,10 +40,23 @@ class RcvThread(threading.Thread):
     def readMsg(self, inst):
         if inst[Constant.INSTRUCTION] == Instructions.SENDALL:
             self.readLobbyMsg(inst)
+        elif inst[Constant.INSTRUCTION] == Instructions.SEND_ROOM:
+            self.readRoomMsg(inst)
         elif inst[Constant.INSTRUCTION] == Instructions.LIST_ROOM:
             self.listRoom(inst)
         elif inst[Constant.INSTRUCTION] == Instructions.ACK:
             self.optAck(inst)
+
+    def readRoomMsg(self, inst):
+        name = inst[Constant.NAME]
+        msg = inst[Constant.MESSAGE]
+        room_name = inst[Constant.ROOM_NAME]
+        print '\n(Room: {0}) [{1}]: {2}'.format(room_name, name, msg)
+
+    def readLobbyMsg(self, inst):
+        name = inst[Constant.NAME]
+        msg = inst[Constant.MESSAGE]
+        print '\n(Lobby) [{0}]: {1}'.format(name, msg)
 
     def optAck(self, inst):
         if inst[Constant.FEEDBACK] == Instructions.ROOM_ALREADY_EXIST:
@@ -71,7 +84,4 @@ class RcvThread(threading.Thread):
                 print '[{0}], '.format(room_name),
             print ''
 
-    def readLobbyMsg(self, inst):
-        name = inst[Constant.NAME]
-        msg = inst[Constant.MESSAGE]
-        print '\n(Lobby) [{0}]: {1}'.format(name, msg)
+

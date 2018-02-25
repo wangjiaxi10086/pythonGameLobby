@@ -35,11 +35,11 @@ class Lobby(object):
         listenfd.listen(self.listen_num)
 
         self.read_list.append(listenfd)
+        start_time = datetime.datetime.now()
 
         while True:
             # use select to support multi clients
             read_set, write_set, except_set = select.select(self.read_list, self.write_list, self.except_list)
-
             for sock in read_set:
                 if sock is listenfd:
                     connfd, client_addr = sock.accept()
@@ -117,6 +117,38 @@ class Lobby(object):
                 self.listRoom(sock, tbl)
             elif tbl[Constant.INSTRUCTION] == Instructions.LEAVE_ROOM:
                 self.leaveRoom(sock, tbl)
+            elif tbl[Constant.INSTRUCTION] == Instructions.SEND_ROOM:
+                self.sendRoom(sock, tbl)
+
+    def sendRoom(self, sock, inst):
+        if sock in self.user_data.keys():
+            if Constant.CURRENT_ROOM in self.user_data[sock].keys():
+                cur_room = self.user_data[sock][Constant.CURRENT_ROOM]
+            else:
+                cur_room = None
+
+            if cur_room:
+                print '[{0}] in room[{1}] send room messages [{2}]'\
+                    .format(inst[Constant.NAME], cur_room, inst[Constant.MESSAGE])
+                tbl = {
+                    Constant.INSTRUCTION: Instructions.SEND_ROOM,
+                    Constant.NAME: inst[Constant.NAME],
+                    Constant.MESSAGE: inst[Constant.MESSAGE],
+                    Constant.ROOM_NAME: cur_room
+                }
+                send_data = json.dumps(tbl)
+                for user_sock in self.room_list[cur_room]:
+                    if user_sock != sock:
+                        self.sendMsg(user_sock, send_data)
+            # not in any room
+            else:
+                print '[{0}] send room messages [{1}]'.format(inst[Constant.NAME], inst[Constant.MESSAGE])
+                tbl = {
+                    Constant.INSTRUCTION: Instructions.ACK,
+                    Constant.FEEDBACK: Instructions.NOT_IN_ROOM
+                }
+                send_data = json.dumps(tbl)
+                self.sendMsg(sock, send_data)
 
     def leaveRoom(self, sock, inst):
         if sock in self.user_data.keys():
@@ -175,7 +207,6 @@ class Lobby(object):
                 else:
                     self.outofRoom(sock, old_room)
                     self.room_list[room_name].append(sock)
-                    print "room list: ", self.room_list
                     self.user_data[sock][Constant.CURRENT_ROOM] = room_name
                     tbl[Constant.FEEDBACK] = Instructions.ENTER_ROOM_SUCCESS
             # if room doesn't exists

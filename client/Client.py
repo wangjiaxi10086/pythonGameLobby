@@ -19,14 +19,17 @@ class Client(object):
             Instructions.USER_NOT_EXIST: "Wrong! User doesn't Exist!",
             Instructions.WRONG_PASSWORD: "Wrong! Password is Wrong!",
             Instructions.SERVER_CLOSED: "Wrong! Server is Closed!",
-            Instructions.WRONG_NAME: "Wrong! Name Should Nnly be Char, Digit or '_'",
+            Instructions.WRONG_NAME: "Wrong! Name Should Only be Char, Digit or '_'",
         }
+
+    def startSock(self):
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock.connect(self.serv_address)
 
     def startClient(self):
         print "Client starting"
         print "Connecting to server..."
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.connect(self.serv_address)
+        self.startSock()
 
         print "Login or Register an account:"
 
@@ -69,6 +72,8 @@ class Client(object):
                 if result < 0:
                     self.outputResult(result)
                     break
+                elif result == 0:
+                    self.startSock()
 
             print "\nLogin or Register an account:"
             opt = raw_input().strip()
@@ -92,6 +97,10 @@ class Client(object):
             if in_str.startswith(Constant.CHAT_ALL):
                 send_str = in_str[len(Constant.CHAT_ALL):].strip()
                 self.sendAll(send_str)
+            # send room messages
+            elif in_str.startswith(Constant.CHAT_ROOM):
+                send_str = in_str[len(Constant.CHAT_ROOM):].strip()
+                self.sendRoom(send_str)
             # create a new room
             elif in_str.startswith(Constant.CREATE_ROOM):
                 room_name = in_str[len(Constant.CREATE_ROOM):].strip()
@@ -114,7 +123,17 @@ class Client(object):
             if self.rcv_thread.out:
                 return Instructions.SERVER_CLOSED
 
+        self.closeClient()
         return 0
+
+    def sendRoom(self, msg):
+        tbl = {
+            Constant.INSTRUCTION: Instructions.SEND_ROOM,
+            Constant.NAME: self.name,
+            Constant.MESSAGE: msg
+        }
+        tbl_str = json.dumps(tbl)
+        self.sendData(tbl_str)
 
     def leaveRoom(self):
         tbl = {

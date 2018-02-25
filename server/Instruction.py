@@ -1,6 +1,7 @@
 
 class Instructions:
 
+    # instructions
     REGISTER = 1
     LOGIN = 2
     ACK = 3
@@ -10,13 +11,16 @@ class Instructions:
     ENTER_ROOM = 7
     LIST_ROOM = 8
     LEAVE_ROOM = 9
+    SEND_ROOM = 10
 
+    # server success answer
     REGISTER_SUCCESS = 1000
     LOGIN_SUCCESS = 1001
     CREATE_ROOM_SUCCESS = 1002
     ENTER_ROOM_SUCCESS = 1003
     LEAVE_ROOM_SUCCESS = 1004
 
+    # server exception answer
     USER_ALREADY_EXIST = 10000
     USER_NOT_EXIST = 10001
     WRONG_PASSWORD = 10002
