@@ -119,6 +119,32 @@ class Lobby(object):
                 self.leaveRoom(sock, tbl)
             elif tbl[Constant.INSTRUCTION] == Instructions.SEND_ROOM:
                 self.sendRoom(sock, tbl)
+            elif tbl[Constant.INSTRUCTION] == Instructions.LIST_ROOM_USER:
+                self.listRoomUser(sock, tbl)
+
+    def listRoomUser(self, sock, inst):
+        if sock in self.user_data.keys():
+            print '[{0}] list room users.'.format(inst[Constant.NAME])
+            if Constant.CURRENT_ROOM in self.user_data[sock].keys():
+                cur_room = self.user_data[sock][Constant.CURRENT_ROOM]
+            else:
+                cur_room = None
+
+            if cur_room:
+                tbl = {
+                    Constant.INSTRUCTION: Instructions.LIST_ROOM_USER,
+                    Constant.ROOM_USER:
+                        [self.user_data[user_sock][Constant.NAME] for user_sock in self.room_list[cur_room]],
+                    Constant.ROOM_NAME: cur_room
+                }
+            # not in any room
+            else:
+                tbl = {
+                    Constant.INSTRUCTION: Instructions.ACK,
+                    Constant.FEEDBACK: Instructions.NOT_IN_ROOM
+                }
+            send_data = json.dumps(tbl)
+            self.sendMsg(sock, send_data)
 
     def sendRoom(self, sock, inst):
         if sock in self.user_data.keys():

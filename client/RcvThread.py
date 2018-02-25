@@ -46,6 +46,19 @@ class RcvThread(threading.Thread):
             self.listRoom(inst)
         elif inst[Constant.INSTRUCTION] == Instructions.ACK:
             self.optAck(inst)
+        elif inst[Constant.INSTRUCTION] == Instructions.LIST_ROOM_USER:
+            self.listRoomUser(inst)
+
+    def listRoomUser(self, inst):
+        user_list = inst[Constant.ROOM_USER]
+        room_name = inst[Constant.ROOM_NAME]
+        if len(user_list) == 0:
+            print'\n(Server) There is none users in this room.'
+        else:
+            print '\n(Server) Users in Room[{0}]:'.format(room_name)
+            for user_name in user_list:
+                print '[{0}], '.format(user_name),
+            print ''
 
     def readRoomMsg(self, inst):
         name = inst[Constant.NAME]

@@ -12,6 +12,7 @@ class Instructions:
     LIST_ROOM = 8
     LEAVE_ROOM = 9
     SEND_ROOM = 10
+    LIST_ROOM_USER = 11
 
     # server success answer
     REGISTER_SUCCESS = 1000
@@ -57,11 +58,15 @@ class Constant:
     ENTER_ROOM = 'enterroom'
     LIST_ROOM = 'listroom'
     LEAVE_ROOM = 'leaveroom'
+    LIST_ROOM_USER = 'listroomuser'
+    HELP = 'help'
 
     ALL_ROOMS = 'allroom'
     ROOM_NAME = 'rname'
     LOCATION = 'loc'
     LOBBY = 'lobby'
+    ROOM_USER = 'ruser'
+
 
     def __init__(self):
         pass

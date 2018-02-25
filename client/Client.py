@@ -112,12 +112,18 @@ class Client(object):
             elif in_str.startswith(Constant.ENTER_ROOM):
                 room_name = in_str[len(Constant.CREATE_ROOM):].strip()
                 self.enterRoom(room_name)
+            # list room user
+            elif in_str.startswith(Constant.LIST_ROOM_USER):
+                self.listRoomUser()
             # list all room
             elif in_str.startswith(Constant.LIST_ROOM):
                 self.listRoom()
             # quit current room
             elif in_str.startswith(Constant.LEAVE_ROOM):
                 self.leaveRoom()
+            # help
+            elif in_str.startswith(Constant.HELP):
+                pass
 
             in_str = raw_input(self.name + '>>> ').strip()
             if self.rcv_thread.out:
@@ -125,6 +131,14 @@ class Client(object):
 
         self.closeClient()
         return 0
+
+    def listRoomUser(self):
+        tbl = {
+            Constant.INSTRUCTION: Instructions.LIST_ROOM_USER,
+            Constant.NAME: self.name
+        }
+        tbl_str = json.dumps(tbl)
+        self.sendData(tbl_str)
 
     def sendRoom(self, msg):
         tbl = {
