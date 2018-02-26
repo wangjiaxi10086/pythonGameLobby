@@ -52,6 +52,14 @@ class RcvThread(threading.Thread):
             self.listRoomUser(inst)
         elif inst[Constant.INSTRUCTION] == Instructions.SENDTO:
             self.readPrivateMsg(inst)
+        elif inst[Constant.INSTRUCTION] == Instructions.PROBLEM:
+            self.readProblem(inst)
+
+    def readProblem(self, inst):
+        game_time = inst[Constant.GAME_TIME]
+        room_name = inst[Constant.ROOM_NAME]
+        pro_msg = inst[Constant.MESSAGE]
+        print '\n{0} (Room: {1}) Game Problem: {2}'.format(game_time, room_name, pro_msg)
 
     def readPrivateMsg(self, inst):
         sour_name = inst[Constant.NAME]

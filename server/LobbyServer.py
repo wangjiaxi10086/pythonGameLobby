@@ -4,6 +4,7 @@ import struct
 import json
 import os
 import datetime
+from GameThread import GameThread
 from Instruction import Instructions
 from Instruction import Constant
 
@@ -24,9 +25,16 @@ class Lobby(object):
         self.write_list = []
         self.except_list = []
 
+        self.game_start = False
+        self.game_thread = GameThread(self.room_list, self.user_data)
+
         self.user_path = os.getcwd() + "\\userdata"
         if not os.path.exists(self.user_path):
             os.mkdir(self.user_path)
+
+    def startGame(self):
+        self.game_start = True
+        self.game_thread.start()
 
     def startLobby(self):
         print "Lobby is starting..."
@@ -35,7 +43,8 @@ class Lobby(object):
         listenfd.listen(self.listen_num)
 
         self.read_list.append(listenfd)
-        start_time = datetime.datetime.now()
+
+        self.startGame()
 
         while True:
             # use select to support multi clients

@@ -2,25 +2,16 @@ import struct
 import json
 import os
 import datetime
+import time
+import sched
+import random
+
+
+def task(schedule):
+    print datetime.datetime.now()
+    schedule.enter(2, 0, task, (schedule,))
 
 if __name__ == '__main__':
-    time1 = datetime.datetime.now()
-    print time1.strftime('%H:%M:%S')
 
-
-    a = 20
-    s = struct.pack('i', a)
-    print repr(s)
-    result = struct.unpack('i', s)
-    print result[0]
-
-    cla = { "name": "netease1", "pass": "123"}
-    cla_str = json.dumps(cla)
-    print cla_str
-
-    cla = json.loads(cla_str)
-    print cla
-
-    print os.getcwd()
-    print os.listdir(os.getcwd() + "\\server")
-
+    for i in range(3):
+        print random.randint(1, 10),

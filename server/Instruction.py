@@ -13,6 +13,7 @@ class Instructions:
     LEAVE_ROOM = 9
     SEND_ROOM = 10
     LIST_ROOM_USER = 11
+    PROBLEM = 12
 
     # server success answer
     REGISTER_SUCCESS = 1000
@@ -51,6 +52,7 @@ class Constant:
     MESSAGE = 'msg'
     LAST_LOGIN_TIME = 'last_login_time'
     CURRENT_ROOM = 'cur_room'
+    GAME_TIME = 'gtime'
 
     CHAT_ALL = 'chatall'
     CHAT_ROOM = 'chatroom'

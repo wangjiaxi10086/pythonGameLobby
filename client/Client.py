@@ -29,56 +29,59 @@ class Client(object):
     def startClient(self):
         print "Client starting"
         print "Connecting to server..."
-        self.startSock()
+        try:
+            self.startSock()
+        except socket.error as e:
+            print "Server is not start."
+        else:
+            print "Login or Register an account:"
 
-        print "Login or Register an account:"
-
-        opt = raw_input().strip()
-        while opt != "exit":
-            right_input = True
-            # login
-            if opt.startswith("log"):
-                print "Login the account:"
-                name = raw_input("name:").strip()
-                password = raw_input("password:").strip()
-                if self.checkName(name):
-                    self.login(name, password)
-                else:
-                    self.outputResult(Instructions.WRONG_NAME)
-                    right_input = False
-            # register
-            elif opt.startswith("reg"):
-                print "Register an account:"
-                name = raw_input("name:").strip()
-                password = raw_input("password:").strip()
-                if self.checkName(name):
-                    self.register(name, password)
-                else:
-                    self.outputResult(Instructions.WRONG_NAME)
-                    right_input = False
-            else:
-                right_input = False
-
-            if right_input:
-                try:
-                    data = self.sock.recv(1024)
-                except socket.error as e:
-                    result = Instructions.SERVER_CLOSED
-                else:
-                    if data:
-                        result = self.readACK(data)
-                    else:
-                        result = Instructions.SERVER_CLOSED
-                if result < 0:
-                    self.outputResult(result)
-                    break
-                elif result == 0:
-                    self.startSock()
-
-            print "\nLogin or Register an account:"
             opt = raw_input().strip()
+            while opt != "exit":
+                right_input = True
+                # login
+                if opt.startswith("log"):
+                    print "Login the account:"
+                    name = raw_input("name:").strip()
+                    password = raw_input("password:").strip()
+                    if self.checkName(name):
+                        self.login(name, password)
+                    else:
+                        self.outputResult(Instructions.WRONG_NAME)
+                        right_input = False
+                # register
+                elif opt.startswith("reg"):
+                    print "Register an account:"
+                    name = raw_input("name:").strip()
+                    password = raw_input("password:").strip()
+                    if self.checkName(name):
+                        self.register(name, password)
+                    else:
+                        self.outputResult(Instructions.WRONG_NAME)
+                        right_input = False
+                else:
+                    right_input = False
 
-        self.closeClient()
+                if right_input:
+                    try:
+                        data = self.sock.recv(1024)
+                    except socket.error as e:
+                        result = Instructions.SERVER_CLOSED
+                    else:
+                        if data:
+                            result = self.readACK(data)
+                        else:
+                            result = Instructions.SERVER_CLOSED
+                    if result < 0:
+                        self.outputResult(result)
+                        break
+                    elif result == 0:
+                        self.startSock()
+
+                print "\nLogin or Register an account:"
+                opt = raw_input().strip()
+
+            self.closeClient()
 
     def checkName(self, name):
         for c in name:

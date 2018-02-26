@@ -1,4 +1,3 @@
-import socket
 import LobbyServer
 
 if __name__ == '__main__':
