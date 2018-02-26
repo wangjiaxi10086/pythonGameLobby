@@ -284,12 +284,11 @@ class Lobby(object):
     def outofRoom(self, sock, room_name):
         # leave the current room, if on one in this room, then delete this room
         if room_name and room_name in self.room_list:
-            self.game_thread.out_of_room(sock, room_name)
+            self.game_thread.outofRoom(sock, room_name)
             self.room_list[room_name].remove(sock)
             if len(self.room_list[room_name]) == 0:
                 self.game_thread.deleteRoom(room_name)
                 self.room_list.pop(room_name)
-
 
     def createRoom(self, sock, inst):
         if sock in self.user_data.keys():
