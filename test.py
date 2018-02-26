@@ -13,5 +13,4 @@ def task(schedule):
 
 if __name__ == '__main__':
 
-    for i in range(3):
-        print random.randint(1, 10),
+    print range(1,1)

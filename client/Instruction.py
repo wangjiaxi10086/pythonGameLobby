@@ -14,6 +14,9 @@ class Instructions:
     SEND_ROOM = 10
     LIST_ROOM_USER = 11
     PROBLEM = 12
+    ANSWER = 13
+    GAME_OVER = 14
+    GAME_RESULT = 15
 
     # server success answer
     REGISTER_SUCCESS = 1000
@@ -21,6 +24,7 @@ class Instructions:
     CREATE_ROOM_SUCCESS = 1002
     ENTER_ROOM_SUCCESS = 1003
     LEAVE_ROOM_SUCCESS = 1004
+    ANSWER_SEND_SUCCESS = 1005
 
     # server exception answer
     USER_ALREADY_EXIST = 10000
@@ -32,6 +36,9 @@ class Instructions:
     ALREADY_IN_ROOM = 10006
     NOT_IN_ROOM = 10007
     USER_NOT_ONLINE = 10008
+    WRONG_SYNTAX_ANSWER = 10009
+    ALREADY_ANSWER = 10010
+    NOT_AT_ANSWER_TIME = 10011
 
     SERVER_CLOSED = -1
     WRONG_DATA = -2
@@ -53,6 +60,8 @@ class Constant:
     LAST_LOGIN_TIME = 'last_login_time'
     CURRENT_ROOM = 'cur_room'
     GAME_TIME = 'gtime'
+    ANSWER_RESULT = 'result'
+    HAS_WINNER = 'has_winner'
 
     CHAT_ALL = 'chatall'
     CHAT_ROOM = 'chatroom'
@@ -63,6 +72,7 @@ class Constant:
     LEAVE_ROOM = 'leaveroom'
     LIST_ROOM_USER = 'listroomuser'
     HELP = 'help'
+    ANSWER = 'answer'
 
     ALL_ROOMS = 'allroom'
     ROOM_NAME = 'rname'

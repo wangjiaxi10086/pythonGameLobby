@@ -85,6 +85,7 @@ class Lobby(object):
             user_data[Constant.LAST_LOGIN_TIME] = user_data[Constant.LAST_LOGIN_TIME].strftime('%Y-%m-%d %H:%M:%S')
 
             # user leave current room
+
             self.outofRoom(sock, cur_room)
             self.user_data.pop(sock)
             self.user_sock.pop(user_name)
@@ -132,6 +133,8 @@ class Lobby(object):
                 self.listRoomUser(sock, tbl)
             elif tbl[Constant.INSTRUCTION] == Instructions.SENDTO:
                 self.sendWith(sock, tbl)
+            elif tbl[Constant.INSTRUCTION] == Instructions.ANSWER:
+                self.game_thread.receiveAnswer(sock, tbl)
 
     def sendWith(self, sock, inst):
         if sock in self.user_data.keys():
@@ -281,9 +284,12 @@ class Lobby(object):
     def outofRoom(self, sock, room_name):
         # leave the current room, if on one in this room, then delete this room
         if room_name and room_name in self.room_list:
+            self.game_thread.out_of_room(sock, room_name)
             self.room_list[room_name].remove(sock)
             if len(self.room_list[room_name]) == 0:
+                self.game_thread.deleteRoom(room_name)
                 self.room_list.pop(room_name)
+
 
     def createRoom(self, sock, inst):
         if sock in self.user_data.keys():

@@ -128,6 +128,10 @@ class Client(object):
             elif in_str.startswith(Constant.CHAT_WITH):
                 data_str = in_str[len(Constant.CHAT_WITH):].strip()
                 self.sendWith(data_str)
+            # answer problem
+            elif in_str.startswith(Constant.ANSWER):
+                answer = in_str[len(Constant.ANSWER):].strip()
+                self.answerProblem(answer)
             # help
             elif in_str.startswith(Constant.HELP):
                 pass
@@ -138,6 +142,15 @@ class Client(object):
 
         self.closeClient()
         return 0
+
+    def answerProblem(self, answer):
+        tbl = {
+            Constant.INSTRUCTION: Instructions.ANSWER,
+            Constant.NAME: self.name,
+            Constant.ANSWER: answer
+        }
+        tbl_str = json.dumps(tbl)
+        self.sendData(tbl_str)
 
     def sendWith(self, data):
         name_len = 0
