@@ -20,6 +20,7 @@ class Client(object):
             Instructions.WRONG_PASSWORD: "Wrong! Password is Wrong!",
             Instructions.SERVER_CLOSED: "Wrong! Server is Closed!",
             Instructions.WRONG_NAME: "Wrong! Name Should Only be Char, Digit or '_'",
+            Instructions.NONE_INPUT: "Wrong! Input Should Not be None!"
         }
 
     def startSock(self):
@@ -44,20 +45,29 @@ class Client(object):
                     print "Login the account:"
                     name = raw_input("name:").strip()
                     password = raw_input("password:").strip()
-                    if self.checkName(name):
-                        self.login(name, password)
+
+                    if len(name) > 0 and len(password) > 0:
+                        if self.checkName(name):
+                            self.login(name, password)
+                        else:
+                            self.outputResult(Instructions.WRONG_NAME)
+                            right_input = False
                     else:
-                        self.outputResult(Instructions.WRONG_NAME)
+                        self.outputResult(Instructions.NONE_INPUT)
                         right_input = False
                 # register
                 elif opt.startswith("reg"):
                     print "Register an account:"
                     name = raw_input("name:").strip()
                     password = raw_input("password:").strip()
-                    if self.checkName(name):
-                        self.register(name, password)
+                    if len(name) > 0 and len(password) > 0:
+                        if self.checkName(name):
+                            self.register(name, password)
+                        else:
+                            self.outputResult(Instructions.WRONG_NAME)
+                            right_input = False
                     else:
-                        self.outputResult(Instructions.WRONG_NAME)
+                        self.outputResult(Instructions.NONE_INPUT)
                         right_input = False
                 else:
                     right_input = False
@@ -134,7 +144,7 @@ class Client(object):
                 self.answerProblem(answer)
             # help
             elif in_str.startswith(Constant.HELP):
-                pass
+                self.help()
 
             in_str = raw_input(self.name + '>>> ').strip()
             if self.rcv_thread.out:
@@ -143,14 +153,32 @@ class Client(object):
         self.closeClient()
         return 0
 
-    def answerProblem(self, answer):
-        tbl = {
-            Constant.INSTRUCTION: Instructions.ANSWER,
-            Constant.NAME: self.name,
-            Constant.ANSWER: answer
+    def help(self):
+        user_inst = {
+            "chatall    [msg]           ": "send message to lobby and all the other users will receive.",
+            "chatroom   [msg]           ": "send message to the current room.",
+            "chatwith   [user] [msg]    ": "send private msg to the user with user name",
+            "createroom [roomname]      ": "create a new room and enter this room",
+            "enterroom  [roomname]      ": "leave current room and enter this room",
+            "listroomuser               ": "list all the users in the current room",
+            "listroom                   ": "list all the rooms in the lobby",
+            "leaveroom                  ": "leave current room",
+            "answer     [msg]           ": "answer the question in the room",
+            "help                       ": "show help messages",
         }
-        tbl_str = json.dumps(tbl)
-        self.sendData(tbl_str)
+        for inst, tip in user_inst.iteritems():
+            print inst, tip
+        print ''
+
+    def answerProblem(self, answer):
+        if len(answer) > 0:
+            tbl = {
+                Constant.INSTRUCTION: Instructions.ANSWER,
+                Constant.NAME: self.name,
+                Constant.ANSWER: answer
+            }
+            tbl_str = json.dumps(tbl)
+            self.sendData(tbl_str)
 
     def sendWith(self, data):
         name_len = 0
@@ -160,17 +188,18 @@ class Client(object):
                 break
         des_name = data[:name_len].strip()
         msg = data[name_len:].strip()
-        if self.checkName(des_name):
-            tbl = {
-                Constant.INSTRUCTION: Instructions.SENDTO,
-                Constant.NAME: self.name,
-                Constant.DESTINATION: des_name,
-                Constant.MESSAGE: msg
-            }
-            tbl_str = json.dumps(tbl)
-            self.sendData(tbl_str)
-        else:
-            self.outputResult(Instructions.WRONG_NAME)
+        if len(msg) > 0:
+            if self.checkName(des_name):
+                tbl = {
+                    Constant.INSTRUCTION: Instructions.SENDTO,
+                    Constant.NAME: self.name,
+                    Constant.DESTINATION: des_name,
+                    Constant.MESSAGE: msg
+                }
+                tbl_str = json.dumps(tbl)
+                self.sendData(tbl_str)
+            else:
+                self.outputResult(Instructions.WRONG_NAME)
 
     def listRoomUser(self):
         tbl = {
@@ -181,13 +210,14 @@ class Client(object):
         self.sendData(tbl_str)
 
     def sendRoom(self, msg):
-        tbl = {
-            Constant.INSTRUCTION: Instructions.SEND_ROOM,
-            Constant.NAME: self.name,
-            Constant.MESSAGE: msg
-        }
-        tbl_str = json.dumps(tbl)
-        self.sendData(tbl_str)
+        if len(msg) > 0:
+            tbl = {
+                Constant.INSTRUCTION: Instructions.SEND_ROOM,
+                Constant.NAME: self.name,
+                Constant.MESSAGE: msg
+            }
+            tbl_str = json.dumps(tbl)
+            self.sendData(tbl_str)
 
     def leaveRoom(self):
         tbl = {
@@ -206,31 +236,34 @@ class Client(object):
         self.sendData(tbl_str)
 
     def enterRoom(self, room_name):
-        tbl = {
-            Constant.INSTRUCTION: Instructions.ENTER_ROOM,
-            Constant.NAME: self.name,
-            Constant.ROOM_NAME: room_name
-        }
-        tbl_str = json.dumps(tbl)
-        self.sendData(tbl_str)
+        if len(room_name) > 0:
+            tbl = {
+                Constant.INSTRUCTION: Instructions.ENTER_ROOM,
+                Constant.NAME: self.name,
+                Constant.ROOM_NAME: room_name
+            }
+            tbl_str = json.dumps(tbl)
+            self.sendData(tbl_str)
 
     def createRoom(self, room_name):
-        tbl = {
-            Constant.INSTRUCTION: Instructions.CREATE_ROOM,
-            Constant.NAME: self.name,
-            Constant.ROOM_NAME: room_name,
-        }
-        tbl_str = json.dumps(tbl)
-        self.sendData(tbl_str)
+        if len(room_name) > 0:
+            tbl = {
+                Constant.INSTRUCTION: Instructions.CREATE_ROOM,
+                Constant.NAME: self.name,
+                Constant.ROOM_NAME: room_name,
+            }
+            tbl_str = json.dumps(tbl)
+            self.sendData(tbl_str)
 
     def sendAll(self, msg):
-        tbl = {
-            Constant.INSTRUCTION: Instructions.SENDALL,
-            Constant.NAME: self.name,
-            Constant.MESSAGE: msg
-        }
-        tbl_str = json.dumps(tbl)
-        self.sendData(tbl_str)
+        if len(msg) > 0:
+            tbl = {
+                Constant.INSTRUCTION: Instructions.SENDALL,
+                Constant.NAME: self.name,
+                Constant.MESSAGE: msg
+            }
+            tbl_str = json.dumps(tbl)
+            self.sendData(tbl_str)
 
     def readACK(self, data):
         self.msg_buf += data
@@ -263,24 +296,26 @@ class Client(object):
         self.sock.shutdown(socket.SHUT_RDWR)
 
     def login(self, name, password):
-        self.name = name
-        tbl = {
-            Constant.INSTRUCTION: Instructions.LOGIN,
-            Constant.NAME: name,
-            Constant.PASSWORD: password
-        }
-        tbl_str = json.dumps(tbl)
-        # print len(tbl_str)
-        self.sendData(tbl_str)
+        if len(name) > 0 and len(password) > 0:
+            self.name = name
+            tbl = {
+                Constant.INSTRUCTION: Instructions.LOGIN,
+                Constant.NAME: name,
+                Constant.PASSWORD: password
+            }
+            tbl_str = json.dumps(tbl)
+            # print len(tbl_str)
+            self.sendData(tbl_str)
 
     def register(self, name, password):
-        tbl = {
-            Constant.INSTRUCTION: Instructions.REGISTER,
-            Constant.NAME: name,
-            Constant.PASSWORD: password
-        }
-        tbl_str = json.dumps(tbl)
-        self.sendData(tbl_str)
+        if len(name) > 0 and len(password) > 0:
+            tbl = {
+                Constant.INSTRUCTION: Instructions.REGISTER,
+                Constant.NAME: name,
+                Constant.PASSWORD: password
+            }
+            tbl_str = json.dumps(tbl)
+            self.sendData(tbl_str)
 
     def sendData(self, msg_str):
         try:

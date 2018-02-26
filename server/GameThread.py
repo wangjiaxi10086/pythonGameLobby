@@ -3,13 +3,15 @@ import struct
 import threading
 import socket
 import time
-import  random
+import random
 import datetime
 from Instruction import Instructions
 from Instruction import Constant
 
 
 class GameThread(threading.Thread):
+
+    question_answer_time = 30
 
     def __init__(self, room_list, user_data):
         threading.Thread.__init__(self)
@@ -22,11 +24,26 @@ class GameThread(threading.Thread):
         self.at_answer_time = False
         self.send_problem_list = {}
 
+    def sleepToMinute(self):
+        now_sec = datetime.datetime.now().second
+        time.sleep(60 - now_sec)
+
+    def sleepToHalfHour(self):
+        now_time = datetime.datetime.now()
+        now_sec = now_time.second
+        now_min = now_time.minute
+        if now_min >= 30:
+            total = (59 - now_min) * 60 + 60 - now_sec
+        else:
+            total = (30 - now_min) * 60 + 60 - now_sec
+        time.sleep(total)
+
     def run(self):
+        self.sleepToMinute()
         while True:
             self.sendProblem()
             self.at_answer_time = True
-            time.sleep(30)
+            time.sleep(self.question_answer_time)
 
             self.gameOver()
             self.at_answer_time = False  # can't answer anymore
@@ -36,17 +53,17 @@ class GameThread(threading.Thread):
             self.already_answer = []
             self.send_problem_list = {}
 
-            time.sleep(15)
+            self.sleepToMinute()
 
     def sendGameResult(self):
         for room_name in self.send_problem_list.keys():
+            tbl = {
+                Constant.INSTRUCTION: Instructions.GAME_RESULT,
+                Constant.HAS_WINNER: False,
+                Constant.ROOM_NAME: room_name
+            }
             if room_name in self.user_answer.keys():
                 user_ans = self.user_answer[room_name]
-                tbl = {
-                    Constant.INSTRUCTION: Instructions.GAME_RESULT,
-                    Constant.HAS_WINNER: False,
-                    Constant.ROOM_NAME: room_name
-                }
                 if len(user_ans) != 0:
                     print user_ans
                     max_result = -1
@@ -64,10 +81,10 @@ class GameThread(threading.Thread):
                             Constant.ANSWER: max_user[Constant.ANSWER],
                             Constant.ROOM_NAME: room_name
                         }
-                send_data = json.dumps(tbl)
-                for user_sock in self.room_list[room_name]:
-                    length = struct.pack('i', len(send_data))
-                    user_sock.send(length + send_data)
+            send_data = json.dumps(tbl)
+            for user_sock in self.room_list[room_name]:
+                length = struct.pack('i', len(send_data))
+                user_sock.send(length + send_data)
 
     def outofRoom(self, sock, room_name):
         if sock in self.user_data.keys():

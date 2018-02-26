@@ -16,27 +16,25 @@ class RcvThread(threading.Thread):
         self.out = False
 
     def run(self):
-        while True:
+        while not self.out:
             try:
                 data = self.sock.recv(1024)
             except socket.error as e:
                 self.sock.shutdown(socket.SHUT_WR)
                 self.out = True
-                break
             else:
                 if data:
                     self.msg_buf += data
                     while len(self.msg_buf) > 4:
                         length = struct.unpack('i', self.msg_buf[0:4])[0]
                         if len(self.msg_buf) < 4 + length:
-                            break
+                            self.out = True
                         inst = json.loads(self.msg_buf[4:4 + length])
                         self.msg_buf = self.msg_buf[4+length:]
                         self.readMsg(inst)
                 else:
                     self.sock.shutdown(socket.SHUT_WR)
                     self.out = True
-                    break
 
     def readMsg(self, inst):
         self.time_now = datetime.datetime.now().strftime('%H:%M:%S')
@@ -58,6 +56,12 @@ class RcvThread(threading.Thread):
             self.gameOver(inst)
         elif inst[Constant.INSTRUCTION] == Instructions.GAME_RESULT:
             self.gameResult(inst)
+        elif inst[Constant.INSTRUCTION] == Instructions.KICK_OFF:
+            self.kickoff()
+
+    def kickoff(self):
+        self.out = True
+        print '\nAccount is login in other client.'
 
     def gameResult(self, inst):
         has_winner = inst[Constant.HAS_WINNER]
@@ -145,7 +149,6 @@ class RcvThread(threading.Thread):
         # not at a answer time
         elif inst[Constant.FEEDBACK] == Instructions.NOT_AT_ANSWER_TIME:
             print '\n(Server) It\'s not at answer time now.'
-
 
     def listRoom(self, inst):
         room_list = inst[Constant.ALL_ROOMS]

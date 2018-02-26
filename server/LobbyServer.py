@@ -94,7 +94,7 @@ class Lobby(object):
             with open(self.user_path + '\\' + user_name, 'w') as user_file:
                 data_str = json.dumps(user_data)
                 user_file.write(data_str)
-        sock.close()
+        sock.shutdown(socket.SHUT_WR)
 
     def readData(self, sock, data):
         if sock not in self.message_buffer.keys():
@@ -343,9 +343,14 @@ class Lobby(object):
         name = inst[Constant.NAME]
         print "user", sock.getpeername(), "login with name:", name
         password = inst[Constant.PASSWORD]
+        print self.user_sock
         if name in self.user_sock.keys():
             # user is already login
             old_sock = self.user_sock[name]
+
+            tbl = {Constant.INSTRUCTION: Instructions.KICK_OFF}
+            send_data = json.dumps(tbl)
+            self.sendMsg(old_sock, send_data)
             # close old sock
             self.closeClient(old_sock)
 

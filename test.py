@@ -8,4 +8,5 @@ import random
 
 
 if __name__ == '__main__':
-    pass
+    now_time = datetime.datetime.now().hour
+    print now_time

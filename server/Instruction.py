@@ -17,6 +17,7 @@ class Instructions:
     ANSWER = 13
     GAME_OVER = 14
     GAME_RESULT = 15
+    KICK_OFF = 16
 
     # server success answer
     REGISTER_SUCCESS = 1000
@@ -39,6 +40,7 @@ class Instructions:
     WRONG_SYNTAX_ANSWER = 10009
     ALREADY_ANSWER = 10010
     NOT_AT_ANSWER_TIME = 10011
+    NONE_INPUT = 10022
 
     SERVER_CLOSED = -1
     WRONG_DATA = -2
