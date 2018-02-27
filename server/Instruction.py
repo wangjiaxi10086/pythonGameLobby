@@ -75,6 +75,7 @@ class Constant:
     LIST_ROOM_USER = 'listroomuser'
     HELP = 'help'
     ANSWER = 'answer'
+    GAME21 = '21game'
 
     ALL_ROOMS = 'allroom'
     ROOM_NAME = 'rname'

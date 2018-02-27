@@ -39,8 +39,8 @@ class GameThread(threading.Thread):
         time.sleep(total)
 
     def run(self):
-        self.sleepToMinute()
         while True:
+            self.sleepToMinute()
             self.sendProblem()
             self.at_answer_time = True
             time.sleep(self.question_answer_time)
@@ -53,8 +53,6 @@ class GameThread(threading.Thread):
             self.already_answer = []
             self.send_problem_list = {}
 
-            self.sleepToMinute()
-
     def sendGameResult(self):
         for room_name in self.send_problem_list.keys():
             tbl = {
@@ -62,6 +60,7 @@ class GameThread(threading.Thread):
                 Constant.HAS_WINNER: False,
                 Constant.ROOM_NAME: room_name
             }
+            # there are some user answer questions.
             if room_name in self.user_answer.keys():
                 user_ans = self.user_answer[room_name]
                 if len(user_ans) != 0:
@@ -122,6 +121,8 @@ class GameThread(threading.Thread):
 
     # check whether user's input is the same with the problem
     def checkAnswer(self, answer, cur_room):
+        if cur_room not in self.send_problem_list.keys():
+            return '-1'
         num_list = []
         i = 0
         while i < len(answer):
@@ -156,17 +157,17 @@ class GameThread(threading.Thread):
 
         if cur_room:
             print 'Receive answer from {0} in Room {1}: [{2}]'.format(user_name, cur_room, answer)
-            try:
-                answer = self.checkAnswer(answer, cur_room)
-                result = eval(answer)
-            # wrong syntax of answer
-            except SyntaxError:
-                tbl = {
-                    Constant.INSTRUCTION: Instructions.ACK,
-                    Constant.FEEDBACK: Instructions.WRONG_SYNTAX_ANSWER
-                }
-            else:
-                if self.at_answer_time:
+            if self.at_answer_time:
+                try:
+                    answer = self.checkAnswer(answer, cur_room)
+                    result = eval(answer)
+                # wrong syntax of answer
+                except SyntaxError:
+                    tbl = {
+                        Constant.INSTRUCTION: Instructions.ACK,
+                        Constant.FEEDBACK: Instructions.WRONG_SYNTAX_ANSWER
+                    }
+                else:
                     user_ans = {Constant.NAME: user_name, Constant.ANSWER_RESULT: result, Constant.ANSWER: answer}
                     if cur_room not in self.user_answer.keys():
                         self.user_answer[cur_room] = [user_ans]
@@ -188,11 +189,11 @@ class GameThread(threading.Thread):
                                 Constant.FEEDBACK: Instructions.ANSWER_SEND_SUCCESS
                             }
                             self.already_answer.append(user_name)
-                else:
-                    tbl = {
-                        Constant.INSTRUCTION: Instructions.ACK,
-                        Constant.FEEDBACK: Instructions.NOT_AT_ANSWER_TIME
-                    }
+            else:
+                tbl = {
+                    Constant.INSTRUCTION: Instructions.ACK,
+                    Constant.FEEDBACK: Instructions.NOT_AT_ANSWER_TIME
+                }
         else:
             tbl = {
                 Constant.INSTRUCTION: Instructions.ACK,

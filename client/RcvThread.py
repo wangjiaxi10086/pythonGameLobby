@@ -119,6 +119,7 @@ class RcvThread(threading.Thread):
         # create room in server successfully
         elif inst[Constant.FEEDBACK] == Instructions.CREATE_ROOM_SUCCESS:
             print '\n(Server) Room [{0}] creates successfully.'.format(inst[Constant.ROOM_NAME])
+            print '(Server) Enter room [{0}]'.format(inst[Constant.ROOM_NAME])
         # user is already in a room
         elif inst[Constant.FEEDBACK] == Instructions.ALREADY_IN_ROOM:
             print '\n(Server) Already in room: [{0}].'.format(inst[Constant.ROOM_NAME])

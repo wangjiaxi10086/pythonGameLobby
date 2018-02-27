@@ -343,7 +343,7 @@ class Lobby(object):
         name = inst[Constant.NAME]
         print "user", sock.getpeername(), "login with name:", name
         password = inst[Constant.PASSWORD]
-        print self.user_sock
+        # print self.user_sock
         if name in self.user_sock.keys():
             # user is already login
             old_sock = self.user_sock[name]

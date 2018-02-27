@@ -139,12 +139,14 @@ class Client(object):
                 data_str = in_str[len(Constant.CHAT_WITH):].strip()
                 self.sendWith(data_str)
             # answer problem
-            elif in_str.startswith(Constant.ANSWER):
-                answer = in_str[len(Constant.ANSWER):].strip()
+            elif in_str.startswith(Constant.GAME21):
+                answer = in_str[len(Constant.GAME21):].strip()
                 self.answerProblem(answer)
             # help
             elif in_str.startswith(Constant.HELP):
                 self.help()
+            elif len(in_str.strip()) > 0:
+                print 'Unknown instructions, you can use [help].'
 
             in_str = raw_input(self.name + '>>> ').strip()
             if self.rcv_thread.out:
@@ -163,8 +165,9 @@ class Client(object):
             "listroomuser               ": "list all the users in the current room",
             "listroom                   ": "list all the rooms in the lobby",
             "leaveroom                  ": "leave current room",
-            "answer     [msg]           ": "answer the question in the room",
+            "21game     [msg]           ": "answer the 21game declared in the room",
             "help                       ": "show help messages",
+            "exit                       ": "exit the lobby"
         }
         for inst, tip in user_inst.iteritems():
             print inst, tip
